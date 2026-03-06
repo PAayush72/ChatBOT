@@ -1,0 +1,506 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Streaming Chatbot</title>
+
+<style>
+  body {
+    font-family: system-ui;
+    background: #0f172a;
+    color: #e5e7eb;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  header {
+    padding: 12px;
+    background: #020617;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  #chat {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .msg {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  .user { background: #2563eb; margin-left: auto; }
+  .bot { background: #1e293b; }
+
+  .system {
+    font-size: 12px;
+    opacity: 0.7;
+    margin: 6px 0;
+  }
+
+  footer {
+    display: flex;
+    padding: 12px;
+    background: #020617;
+    border-top: 1px solid #1e293b;
+    gap: 8px;
+  }
+
+  input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    background: #020617;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+  }
+
+  button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+  }
+
+  button.stop { background: #dc2626; }
+
+  .typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+    display: inline-block;
+  }
+
+  .typing-dots span:nth-child(1){animation-delay:-0.32s}
+  .typing-dots span:nth-child(2){animation-delay:-0.16s}
+
+  @keyframes bounce {
+    0%,80%,100%{transform:scale(0);opacity:.3}
+    40%{transform:scale(1);opacity:1}
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <strong>ChatBot by Mistral</strong>
+</header>
+
+<div id="chat"></div>
+
+<footer>
+  <input id="msg" placeholder="Type a message…" />
+  <button onclick="send()">Send</button>
+  <button class="stop" onclick="stopResponse()">Stop</button>
+</footer>
+
+<script>
+let socket;
+let socketReady = false;
+let isGenerating = false;
+let typingBubble = null;
+let currentBotBubble = null;
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("msg");
+
+function initSocket() {
+  socket = new WebSocket("ws://127.0.0.1:8000/ws/chat");
+
+  socket.onopen = () => {
+    socketReady = true;
+    console.log("✅ WebSocket connected");
+  };
+
+  socket.onclose = () => {
+    socketReady = false;
+    console.log("❌ WebSocket closed");
+  };
+
+  socket.onmessage = (e) => {
+    if (e.data === "__END__") {
+      endResponse();
+      return;
+    }
+
+    if (!currentBotBubble) {
+      removeTyping();
+      currentBotBubble = addMessage("", "bot");
+    }
+
+    currentBotBubble.textContent += e.data;
+    chat.scrollTop = chat.scrollHeight;
+  };
+}
+
+window.addEventListener("load", initSocket);
+window.addEventListener("beforeunload", () => socket?.close());
+
+function send() {
+  if (!socketReady || isGenerating) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  input.disabled = true;
+  isGenerating = true;
+
+  showTyping();
+
+  socket.send(JSON.stringify({
+    user_id: 1,
+    message: text
+  }));
+}
+
+function stopResponse() {
+  if (!isGenerating) return;
+
+  isGenerating = false;
+  removeTyping();
+  addSystem("⛔ Response stopped");
+  input.disabled = false;
+  currentBotBubble = null;
+}
+
+function endResponse() {
+  removeTyping();
+  addSystem("✔ Response ended");
+  isGenerating = false;
+  input.disabled = false;
+  currentBotBubble = null;
+}
+
+function addMessage(text, cls) {
+  const d = document.createElement("div");
+  d.className = `msg ${cls}`;
+  d.textContent = text;
+  chat.appendChild(d);
+  return d;
+}
+
+function addSystem(text) {
+  const d = document.createElement("div");
+  d.className = "system";
+  d.textContent = text;
+  chat.appendChild(d);
+}
+
+function showTyping() {
+  const d = document.createElement("div");
+  d.className = "msg bot";
+  d.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(d);
+  typingBubble = d;
+}
+
+function removeTyping() {
+  if (typingBubble) typingBubble.remove();
+  typingBubble = null;
+}
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") send();
+});
+</script>
+
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Streaming Chatbot</title>
+
+<style>
+  body {
+    font-family: system-ui;
+    background: #0f172a;
+    color: #e5e7eb;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  header {
+    padding: 12px;
+    background: #020617;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  select {
+    background: #020617;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px;
+  }
+
+  #chat {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .msg {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  .user { background: #2563eb; margin-left: auto; }
+  .bot { background: #1e293b; }
+
+  .system {
+    font-size: 12px;
+    opacity: 0.7;
+    margin: 6px 0;
+  }
+
+  footer {
+    display: flex;
+    padding: 12px;
+    background: #020617;
+    border-top: 1px solid #1e293b;
+    gap: 8px;
+  }
+
+  input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    background: #020617;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+  }
+
+  button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+  }
+
+  button.stop { background: #dc2626; }
+
+  .typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+    display: inline-block;
+  }
+
+  .typing-dots span:nth-child(1){animation-delay:-0.32s}
+  .typing-dots span:nth-child(2){animation-delay:-0.16s}
+
+  @keyframes bounce {
+    0%,80%,100%{transform:scale(0);opacity:.3}
+    40%{transform:scale(1);opacity:1}
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <strong>User:</strong>
+  <select id="userSelect"></select>
+  <button onclick="createUser()">+ New</button>
+  <strong style="margin-left:auto;">ChatBot by Mistral</strong>
+</header>
+
+<div id="chat"></div>
+
+<footer>
+  <input id="msg" placeholder="Type a message…" />
+  <button onclick="send()">Send</button>
+  <button class="stop" onclick="stopResponse()">Stop</button>
+</footer>
+
+<script>
+let socket;
+let socketReady = false;
+let isGenerating = false;
+let typingBubble = null;
+let currentBotBubble = null;
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("msg");
+const userSelect = document.getElementById("userSelect");
+
+/* ================= USER REGISTRY ================= */
+let users = JSON.parse(localStorage.getItem("users") || "{}");
+let currentUserId = null;
+
+function saveUsers() {
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+function refreshUsers() {
+  userSelect.innerHTML = "";
+  for (const id in users) {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = users[id];
+    userSelect.appendChild(opt);
+  }
+  if (currentUserId) userSelect.value = currentUserId;
+}
+
+function createUser() {
+  const id = Date.now();
+  users[id] = `User ${Object.keys(users).length + 1}`;
+  currentUserId = id;
+  saveUsers();
+  refreshUsers();
+  chat.innerHTML = "";
+}
+
+userSelect.onchange = () => {
+  currentUserId = userSelect.value;
+  chat.innerHTML = "";
+};
+
+// init users
+if (Object.keys(users).length === 0) {
+  createUser();
+} else {
+  currentUserId = Object.keys(users)[0];
+  refreshUsers();
+}
+
+/* ================= WEBSOCKET ================= */
+function initSocket() {
+  socket = new WebSocket("ws://127.0.0.1:8000/ws/chat");
+
+  socket.onopen = () => {
+    socketReady = true;
+    console.log("✅ WebSocket connected");
+  };
+
+  socket.onclose = () => {
+    socketReady = false;
+    console.log("❌ WebSocket closed");
+  };
+
+  socket.onmessage = (e) => {
+    if (e.data === "__END__") {
+      endResponse();
+      return;
+    }
+
+    if (!currentBotBubble) {
+      removeTyping();
+      currentBotBubble = addMessage("", "bot");
+    }
+
+    currentBotBubble.textContent += e.data;
+    chat.scrollTop = chat.scrollHeight;
+  };
+}
+
+window.addEventListener("load", initSocket);
+window.addEventListener("beforeunload", () => socket?.close());
+
+/* ================= CHAT ================= */
+function send() {
+  if (!socketReady || isGenerating) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  input.disabled = true;
+  isGenerating = true;
+
+  showTyping();
+
+  socket.send(JSON.stringify({
+    user_id: Number(currentUserId),
+    message: text
+  }));
+}
+
+function stopResponse() {
+  if (!isGenerating) return;
+
+  isGenerating = false;
+  removeTyping();
+  addSystem("⛔ Response stopped");
+  input.disabled = false;
+  currentBotBubble = null;
+}
+
+function endResponse() {
+  removeTyping();
+  addSystem("✔ Response ended");
+  isGenerating = false;
+  input.disabled = false;
+  currentBotBubble = null;
+}
+
+function addMessage(text, cls) {
+  const d = document.createElement("div");
+  d.className = `msg ${cls}`;
+  d.textContent = text;
+  chat.appendChild(d);
+  return d;
+}
+
+function addSystem(text) {
+  const d = document.createElement("div");
+  d.className = "system";
+  d.textContent = text;
+  chat.appendChild(d);
+}
+
+function showTyping() {
+  const d = document.createElement("div");
+  d.className = "msg bot";
+  d.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(d);
+  typingBubble = d;
+}
+
+function removeTyping() {
+  if (typingBubble) typingBubble.remove();
+  typingBubble = null;
+}
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") send();
+});
+</script>
+
+</body>
+</html>
